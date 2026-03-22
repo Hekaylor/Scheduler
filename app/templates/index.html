@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    
+    <div class="tasks-zone">
+    <h2>My Tasks</h2>
+        <ul> 
+            {% for task in task_list %}
+                <li>{{ task }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="task-buttons">
+        <button onClick="toggleAddForm()">New Task</button>
+        <button onClick="toggleRemoveForm()">Remove Task</button>
+    </div>
+
+    <div id="addForm" class="hidden-form">
+        <form method="POST" action="{{ url_for('new_task_form_submission') }}">
+
+            <label for="new_task_name">Enter Name:</label><br>
+            <input type="text" id="new_task_name" name="new_task_name"><br>
+
+            <label for="new_task_deadline">Enter Deadline:</label><br>
+            <input type="datetime-local" id="new_task_deadline" name="new_task_deadline"><br>
+
+            <label for="new_task_priority">Select Priority Level:</label><br>
+            <select id="new_task_priority" name="new_task_priority">
+                <option value="lowest">Lowest</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="highest">Highest</option>
+            </select><br>
+
+            <label for="new_task_length">Enter Length (Mins):</label><br>
+            <input type="number" id="new_task_length" name="new_task_length" value="60" min="0" step="1"><br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div id="removeForm" class="hidden-form">
+        <form method="POST" action="{{ url_for('remove_task_form_submission') }}">
+
+            <label for="remove_task_name">Enter Name:</label><br>
+            <input type="text" id="remove_task_name" name="remove_task_name"><br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <div class="calendar-zone">
+        <div class="time-slots">
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>10</span>
+            <span>11</span>
+            <span>12</span>
+            <span>13</span>
+            <span>14</span>
+            <span>15</span>
+            <span>16</span>
+            <span>17</span>
+            <span>18</span>
+            <span>19</span>
+            <span>20</span>
+            <span>21</span>
+            <span>22</span>
+            <span>23</span>
+            <span></span>
+        </div>
+
+        <ul class="box-list"></ul>
+        
+    </div>
+
+    <script>
+        const hourHeight = 51.5;
+        const startHour = 8;
+        let currentTop = startHour * hourHeight;
+        
+        const boxList = document.querySelector(".box-list");
+
+        fetch("/tasks.json")
+            .then(response => response.json())
+            .then(tasks => {
+                tasks.sort((a, b) => b.importance - a.importance);
+                tasks.forEach(task => {
+                    const itemHeight = (task.length / 60) * hourHeight;
+
+                    const li = document.createElement("li");
+                    li.className = "item-box";
+                    li.style.position = "absolute";
+                    li.style.top = currentTop + "px";
+                    li.style.height = itemHeight + "px";
+                    li.textContent = task.name;
+
+                    boxList.appendChild(li);
+
+                    currentTop += itemHeight;
+                });
+            });
+    </script>
+
+</body>
+
+</html>

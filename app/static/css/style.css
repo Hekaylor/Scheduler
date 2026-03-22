@@ -1,0 +1,94 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  position: relative;
+  width: 100vw;
+  min-height: 520px;
+}
+
+.calendar-zone {
+  width: 300px;
+  height: 1200px;
+  background-color: lightgray;
+  border: 2px solid black;
+  padding: 20px;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.calendar-zone::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 10%;
+  width: 2px;
+  background-color: black;
+}
+
+.time-slots {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 50px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  align-items: center; 
+}
+
+.time-slots span {
+  font-size: 0.8em;
+  white-space: nowrap; 
+}
+
+.tasks-zone {
+  width: 300px;
+  height: 500px;
+  background-color: lightgray;
+  border: 2px solid black;
+  padding: 20px;
+  position: absolute; 
+  right: 10px; 
+  top: 10px;
+}
+
+#task-list li {
+  margin-bottom: 10px;
+  list-style-type: disc;
+}
+  
+.hidden-form {
+  display: none;
+}
+
+.box-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item-box {
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  padding: 1px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  left: 15%;
+  width: 80%;
+  box-sizing: border-box;
+}
+
+.task-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
