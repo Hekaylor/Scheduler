@@ -10,25 +10,74 @@ body {
 }
 
 .calendar-zone {
-  width: 300px;
+  width: 900px;
   height: 1200px;
-  background-color: lightgray;
   border: 2px solid black;
-  padding: 20px;
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  margin: 20px auto;
+  background-color: white;
 }
 
-.calendar-zone::after {
+.week-grid {
+  display: flex;
+  height: 100%;
+}
+
+.time-column {
+  width: 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-slot {
+  height: 50px;
+  font-size: 12px;
+  border-bottom: 1px solid black;
+  text-align: center;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  flex-grow: 1;
+}
+
+.day-column {
+  position: relative;
+  border-left: 1px solid black;
+}
+
+.day-column::before {
   content: "";
   position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 10%;
-  width: 2px;
-  background-color: black;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 49px,
+    black 50px
+  );
+}
+
+.day-column::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 24px,
+    rgba(0,0,0,0.3) 25px
+  );
+}
+
+.day-labels {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
 }
 
 .time-slots {
@@ -49,14 +98,25 @@ body {
 }
 
 .tasks-zone {
-  width: 300px;
-  height: 500px;
+  width: 170px;
+  height: 250px;
   background-color: lightgray;
   border: 2px solid black;
   padding: 20px;
   position: absolute; 
   right: 10px; 
   top: 10px;
+}
+
+.backlog-zone {
+  width: 170px;
+  height: 250px;
+  background-color: lightgray;
+  border: 2px solid black;
+  padding: 20px;
+  position: absolute; 
+  right: 10px; 
+  top: 300px;
 }
 
 #task-list li {

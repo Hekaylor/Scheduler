@@ -11,9 +11,18 @@
 <body>
     
     <div class="tasks-zone">
-    <h2>My Tasks</h2>
+    <h2>Current Tasks</h2>
         <ul> 
             {% for task in task_list %}
+                <li>{{ task }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="backlog-zone">
+    <h2>Backlog</h2>
+        <ul> 
+            {% for task in backlog_list %}
                 <li>{{ task }}</li>
             {% endfor %}
         </ul>
@@ -62,62 +71,64 @@
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
     <div class="calendar-zone">
-        <div class="time-slots">
-            <span>0</span>
-            <span>1</span>
-            <span>2</span>
-            <span>3</span>
-            <span>4</span>
-            <span>5</span>
-            <span>6</span>
-            <span>7</span>
-            <span>8</span>
-            <span>9</span>
-            <span>10</span>
-            <span>11</span>
-            <span>12</span>
-            <span>13</span>
-            <span>14</span>
-            <span>15</span>
-            <span>16</span>
-            <span>17</span>
-            <span>18</span>
-            <span>19</span>
-            <span>20</span>
-            <span>21</span>
-            <span>22</span>
-            <span>23</span>
-            <span></span>
+        <div class="day-labels" id="dayLabels"></div>
+        <div class="week-grid">
+            <div class="time-column">
+                {% for h in range(24) %}
+                    <div class="time-slot">{{ h }}</div>
+                {% endfor %}
+            </div>
+    
+            <div class="days">
+                {% for i in range(7) %}
+                    <div class="day-column" data-day="{{ i }}"></div>
+                {% endfor %}
+            </div>
         </div>
-
-        <ul class="box-list"></ul>
-        
     </div>
 
     <script>
-        const hourHeight = 51.5;
-        const startHour = 8;
-        let currentTop = startHour * hourHeight;
+        const hourHeight = 50;
+        const startHour = 0;
+        const visibleHours = 24; 
+        const maxMinutesPerDay = visibleHours * 60;
+        const days = 7;
+
+        let dayTime = Array(days).fill(startHour * 60);
         
-        const boxList = document.querySelector(".box-list");
+        const column = document.querySelector('.day-column[data-day="0"]');
 
         fetch("/tasks.json")
             .then(response => response.json())
             .then(tasks => {
+                // Sort tasks from highest importance to lowest
                 tasks.sort((a, b) => b.importance - a.importance);
+
+                let currentDay = 0;
+
                 tasks.forEach(task => {
-                    const itemHeight = (task.length / 60) * hourHeight;
+                // Move to next day if task doesn't fit
+                while (currentDay < days && dayTime[currentDay] + task.length > maxMinutesPerDay) {
+                    currentDay++;
+                }
 
-                    const li = document.createElement("li");
-                    li.className = "item-box";
-                    li.style.position = "absolute";
-                    li.style.top = currentTop + "px";
-                    li.style.height = itemHeight + "px";
-                    li.textContent = task.name;
+                // Stop if no days left
+                if (currentDay >= days) return;
 
-                    boxList.appendChild(li);
+                const column = document.querySelector(`.day-column[data-day="${currentDay}"]`);
+                const startTop = (dayTime[currentDay] / 60) * hourHeight;
+                const height = (task.length / 60) * hourHeight;
 
-                    currentTop += itemHeight;
+                const div = document.createElement("div");
+                div.className = "item-box";
+                div.style.position = "absolute";
+                div.style.top = startTop + "px";
+                div.style.height = height + "px";
+                div.textContent = task.name;
+
+                column.appendChild(div);
+
+                dayTime[currentDay] += task.length;
                 });
             });
     </script>

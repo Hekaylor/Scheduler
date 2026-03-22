@@ -11,20 +11,28 @@ app = Flask(__name__)
 @app.route('/')
 def run_app():
     task_list=[]
+    backlog_list=[]
     with open('tasks.csv', mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            task_list.append(row['name'])
-    return render_template("index.html", task_list=task_list)
+            if datetime.fromisoformat(row['deadline']) < datetime.now():
+                backlog_list.append(row['name'])
+            else:
+                task_list.append(row['name'])
+    return render_template("index.html", task_list=task_list, backlog_list=backlog_list)
 
 @app.route('/add', methods=['GET', 'POST'])
 def new_task_form_submission():
     # Fill task_list with items from tasks.csv
     task_list=[]
+    backlog_list=[]
     with open('tasks.csv', mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            task_list.append(row['name'])
+            if datetime.fromisoformat(row['deadline']) < datetime.now():
+                backlog_list.append(row['name'])
+            else:
+                task_list.append(row['name'])
 
     # If form has been submitted add new task to task_list and tasks.csv
     priority_levels = ["low", "lowest", "medium", "high", "highest"]
@@ -36,30 +44,37 @@ def new_task_form_submission():
             if task_priority == level:
                 task_priority = priority_levels.index(level) + 1
         task_length = request.form.get('new_task_length')
-        time_until_due = abs(math.floor((task_deadline - datetime.now()).total_seconds() / 60))
-        importance = int(task_priority) / int(time_until_due)
+        time_until_due = max(1, math.floor((task_deadline - datetime.now()).total_seconds() / 60))
+        importance = abs(int(task_priority) / int(time_until_due))
 
         # Add new task as a row in tasks.csv and append new task name to task_list
         with open('tasks.csv', mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([task_name, task_deadline, task_priority, task_length, time_until_due, importance])
-            task_list.append(task_name)
+            if task_deadline < datetime.now():
+                backlog_list.append(task_name)
+            else:
+                task_list.append(task_name)
 
         # Return and re-render HTML with updated task_list
         return redirect(url_for('new_task_form_submission'))
-    return render_template('index.html', task_list=task_list)
+    return render_template('index.html', task_list=task_list, backlog_list=backlog_list)
 
 @app.route('/remove', methods=['GET', 'POST'])
 def remove_task_form_submission():
     # Fill task_list with items from tasks.csv
-    rows = []
-    task_list = []
+    rows=[]
+    task_list=[]
+    backlog_list=[]
     with open('tasks.csv', mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         fieldnames = reader.fieldnames
         for row in reader:
             rows.append(row)
-            task_list.append(row['name'])
+            if datetime.fromisoformat(row['deadline']) < datetime.now():
+                backlog_list.append(row['name'])
+            else:
+                task_list.append(row['name'])
 
     # If form has been submitted remove task from task_list and tasks.csv
     if request.method == 'POST':
@@ -68,24 +83,40 @@ def remove_task_form_submission():
             writer.writeheader()
             for task in rows:
                 if task['name'] == request.form.get('remove_task_name'):
-                    task_list.remove(task['name'])
+                    if task['name'] in task_list:
+                        task_list.remove(task['name'])
+                    elif task['name'] in backlog_list:
+                        backlog_list.remove(task['name'])
                 else:
                     writer.writerow(task)
 
         # Return and re-render HTML with updated task_list
         return redirect(url_for('remove_task_form_submission'))
-    return render_template('index.html', task_list=task_list)
+    return render_template('index.html', task_list=task_list, backlog_list=backlog_list)
 
 @app.route('/tasks.json')
 def get_tasks_json():
-    tasks_info = []
+    rows=[]
     with open('tasks.csv', mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
+        fieldnames = reader.fieldnames
         for row in reader:
+            rows.append(row)
+
+    tasks_info = []
+    with open('tasks.csv', mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for task in rows:
+            time_until_due = max(1, math.floor((datetime.fromisoformat(task['deadline']) - datetime.now()).total_seconds() / 60))
+            importance = abs(int(task['priority']) / int(time_until_due))
+            task['time_until_due'] = time_until_due
+            task['importance'] = importance
             tasks_info.append({
-                "name": row['name'],
-                "length": int(row['length']),
-                "importance": row['importance']
+                "name": task['name'],
+                "length": int(task['length']),
+                "importance": task['importance']
             })
+            writer.writerow(task)
 
     return jsonify(tasks_info)
