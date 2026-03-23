@@ -120,3 +120,37 @@ def get_tasks_json():
             writer.writerow(task)
 
     return jsonify(tasks_info)
+
+@app.route('/blocks.json')
+def get_blocks_json():
+    blocks = []
+    today = datetime.now().date()
+    with open("blocks.csv", mode='r', newline='', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            start_dt = datetime.fromisoformat(row['start'])
+            day_diff = (start_dt.date() - today).days
+            if 0 <= day_diff < 7:
+                blocks.append({
+                    "name": row['name'],
+                    "start": row['start'],
+                    "length": int(row['length']),
+                    "day_index": day_diff 
+                })
+
+    return jsonify(blocks)
+
+@app.route('/add_block', methods=['POST'])
+def add_block():
+    name = request.form.get('blockName')
+    start = request.form.get('blockStart')
+    length = request.form.get('blockLength')
+    with open("blocks.csv", mode='a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=['name', 'start', 'length'])
+        writer.writerow({
+            'name': name,
+            'start': start,
+            'length': length
+        })
+
+    return redirect(url_for('run_app'))

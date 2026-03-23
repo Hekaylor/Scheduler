@@ -28,9 +28,19 @@
         </ul>
     </div>
 
+    <div class="block-zone">
+        <h2>Time Blocks</h2>
+            <ul> 
+                {% for task in block_list %}
+                    <li>{{ task }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
     <div class="task-buttons">
         <button onClick="toggleAddForm()">New Task</button>
         <button onClick="toggleRemoveForm()">Remove Task</button>
+        <button onClick="toggleAddTimeBlock()">Add Time Block</button>
     </div>
 
     <div id="addForm" class="hidden-form">
@@ -68,6 +78,21 @@
         </form>
     </div>
 
+    <div id="addTimeBlock" class="hidden-form">
+        <form method="POST" action="{{ url_for('add_block') }}">
+            <label for="blockName">Enter Name:</label><br>
+            <input type="text" id="blockName" name="blockName" required><br>
+            
+            <label for="blockStart">Enter Date & Start Time:</label><br>
+            <input type="datetime-local" id="blockStart" name="blockStart" required><br>
+    
+            <label for="blockLength">Enter Length (Mins):</label><br>
+            <input type="number" id="blockLength" name="blockLength" value="60" min="1" step="1" required><br>
+    
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
     <div class="calendar-zone">
@@ -88,49 +113,92 @@
     </div>
 
     <script>
-        const hourHeight = 50;
-        const startHour = 0;
-        const visibleHours = 24; 
+        const hourHeight = 50;    
+        const startHour = 0;      
+        const visibleHours = 24;   
         const maxMinutesPerDay = visibleHours * 60;
         const days = 7;
 
         let dayTime = Array(days).fill(startHour * 60);
-        
-        const column = document.querySelector('.day-column[data-day="0"]');
 
         fetch("/tasks.json")
-            .then(response => response.json())
-            .then(tasks => {
-                // Sort tasks from highest importance to lowest
-                tasks.sort((a, b) => b.importance - a.importance);
+        .then(response => response.json())
+        .then(tasks => {
+            tasks.sort((a, b) => b.importance - a.importance);
 
-                let currentDay = 0;
+            tasks.forEach(task => {
+            let remainingLength = task.length;
+            let currentDay = 0;
 
-                tasks.forEach(task => {
-                // Move to next day if task doesn't fit
-                while (currentDay < days && dayTime[currentDay] + task.length > maxMinutesPerDay) {
-                    currentDay++;
+            while (remainingLength > 0 && currentDay < days) {
+                const available = maxMinutesPerDay - dayTime[currentDay];
+
+                if (available <= 0) {
+                currentDay++;
+                continue;
                 }
 
-                // Stop if no days left
-                if (currentDay >= days) return;
-
+                const taskPartLength = Math.min(remainingLength, available);
                 const column = document.querySelector(`.day-column[data-day="${currentDay}"]`);
                 const startTop = (dayTime[currentDay] / 60) * hourHeight;
-                const height = (task.length / 60) * hourHeight;
+                const height = (taskPartLength / 60) * hourHeight;
 
                 const div = document.createElement("div");
                 div.className = "item-box";
                 div.style.position = "absolute";
                 div.style.top = startTop + "px";
                 div.style.height = height + "px";
-                div.textContent = task.name;
+                div.textContent = task.name; 
 
                 column.appendChild(div);
 
-                dayTime[currentDay] += task.length;
-                });
+                dayTime[currentDay] += taskPartLength;
+                remainingLength -= taskPartLength;
+
+                if (dayTime[currentDay] >= maxMinutesPerDay) {
+                currentDay++;
+                }
+            }
             });
+        });
+    </script>
+
+    <script>
+        fetch("/blocks.json")
+        .then(res => res.json())
+        .then(blocks => {
+            const blockZone = document.querySelector(".block-zone ul");
+            const dayColumns = document.querySelectorAll(".day-column");
+
+            blockZone.innerHTML = "";
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            blocks.forEach(block => {
+                const start = new Date(block.start);
+                const startDate = new Date(start);
+                startDate.setHours(0,0,0,0);
+                const dayIndex = Math.floor((startDate - today) / (1000*60*60*24));
+
+                if (dayIndex < 0 || dayIndex >= 7) return;
+
+                const li = document.createElement("li");
+                li.textContent = `${block.name} (${block.length} mins)`;
+                blockZone.appendChild(li);
+                const column = dayColumns[dayIndex];
+                const startTop = start.getHours() * hourHeight + (start.getMinutes()/60)*hourHeight;
+                const height = (block.length / 60) * hourHeight;
+                const div = document.createElement("div");
+                div.className = "item-box";
+                div.style.position = "absolute";
+                div.style.top = startTop + "px";
+                div.style.height = height + "px";
+                div.style.backgroundColor = "#d1e7ff";
+                div.textContent = block.name;
+                column.appendChild(div);
+            });
+        });
     </script>
 
 </body>

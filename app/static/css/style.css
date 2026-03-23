@@ -119,6 +119,17 @@ body {
   top: 300px;
 }
 
+.block-zone {
+  width: 170px;
+  height: 250px;
+  background-color: lightgray;
+  border: 2px solid black;
+  padding: 20px;
+  position: absolute; 
+  right: 10px; 
+  top: 590px;
+}
+
 #task-list li {
   margin-bottom: 10px;
   list-style-type: disc;
