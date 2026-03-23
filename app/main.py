@@ -96,6 +96,7 @@ def remove_task_form_submission():
 
 @app.route('/tasks.json')
 def get_tasks_json():
+    # Get rows from tasks.csv
     rows=[]
     with open('tasks.csv', mode='r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
@@ -103,6 +104,8 @@ def get_tasks_json():
         for row in reader:
             rows.append(row)
 
+    # Update time_until_due and importance in tasks.csv
+    # Also update tasks_info with task name, length, and importance to send back to HTML
     tasks_info = []
     with open('tasks.csv', mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -123,6 +126,8 @@ def get_tasks_json():
 
 @app.route('/blocks.json')
 def get_blocks_json():
+    # Get day and time start for a time block from blocks.csv
+    # Also create blocks with name, start, length, and the time between now and the block
     blocks = []
     today = datetime.now().date()
     with open("blocks.csv", mode='r', newline='', encoding='utf-8') as file:
@@ -142,6 +147,7 @@ def get_blocks_json():
 
 @app.route('/add_block', methods=['POST'])
 def add_block():
+    # Get block name, start, and length from form and write to blocks.csv
     name = request.form.get('blockName')
     start = request.form.get('blockStart')
     length = request.form.get('blockLength')
