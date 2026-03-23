@@ -121,7 +121,7 @@
         const busyTimes = Array(days).fill().map(() => []);
         
         function findNextGap(dayIndex, maxLength) {
-            // Returns [start, length] that fits, max length is maxLength
+            // Returns [start, length] that fits
             busyTimes[dayIndex].sort((a,b) => a[0] - b[0]);
             let start = 0;
         
